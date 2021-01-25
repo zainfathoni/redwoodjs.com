@@ -2435,6 +2435,62 @@ Check out **Comment** in Storybook and you should see two stories for Comment, o
 
 ![image](https://user-images.githubusercontent.com/300/102554392-99c55900-4079-11eb-94cb-78ee12d72577.png)
 
+Now check out **BlogPost -> Full** in Storybook and you should see an error like this.
+
+![image](https://user-images.githubusercontent.com/6315466/105736643-fddc1680-5f6f-11eb-9f0f-fd5c2b7102f4.png)
+
+It happens because our **BlogPost** component now renders the **CommentsCell** which expects a GraphQL response for getting the initial comments in the first load of the page. This is where our `mockGraphQLQuery()` comes to the rescue! We can mock the initial comments of the page by using it like this.
+
+```javascript{14-27}
+// web/src/components/BlogPost/BlogPost.stories.js
+
+import BlogPost from './BlogPost'
+
+const POST = {
+  id: 1,
+  title: 'First Post',
+  body:
+    'Neutra tacos hot chicken prism raw denim, put a bird on it enamel pin post-ironic vape cred DIY. Street art next level umami squid. Hammock hexagon glossier 8-bit banjo. Neutra la croix mixtape echo park four loko semiotics kitsch forage chambray. Semiotics salvia selfies jianbing hella shaman. Letterpress helvetica vaporware cronut, shaman butcher YOLO poke fixie hoodie gentrify woke heirloom.',
+  createdAt: '2020-01-01T12:34:56Z',
+}
+
+export const full = () => {
+  mockGraphQLQuery('CommentsQuery', (variables) => {
+    const id = parseInt(Math.random() * 1000)
+    return {
+      comments: [
+        {
+          id,
+          name: 'John Doe',
+          body: 'No comment',
+          postId: variables.postId,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    }
+  })
+  return <BlogPost post={POST} />
+}
+export const summary = () => {
+  return <BlogPost post={POST} summary={true} />
+}
+
+export default {
+  title: 'Components/BlogPost',
+  decorators: [
+    (Story) => (
+      <div className="m-8">
+        <Story />
+      </div>
+    ),
+  ],
+}
+```
+
+Now your **BlogPost -> Full** story in Storybook should be back again!
+
+![image](https://user-images.githubusercontent.com/6315466/105737743-4516d700-5f71-11eb-8e7f-0fa09061dc9e.png)
+
 ### Mocking currentUser for Jest
 
 We can use the same `mockCurrentUser()` function in our Jest tests as well. Let's check that the word "Delete" is present in the component's output when the user is a moderator, and that it's not present if the user has any other role (or no role):
